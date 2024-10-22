@@ -22,7 +22,7 @@ public class BudgetController {
     }
 
     // API untuk mengambil seluruh data budget
-    @PostMapping("/user/{id}")
+    @GetMapping("/user/{user_id}")
     public ResponseEntity<BaseResponseDto> getAllBudgets(@PathVariable String user_id) {
         BaseResponseDto responseDto = budgetService.getAll(user_id);
         return new ResponseEntity<>(responseDto, responseDto.getStatus());

@@ -5,6 +5,8 @@ import com.syarif.financemanagement.financemanagement.dto.request.RegisterReques
 import com.syarif.financemanagement.financemanagement.dto.response.BaseResponseDto;
 import com.syarif.financemanagement.financemanagement.service.Impl.UserDetailServiceImpl;
 import com.syarif.financemanagement.financemanagement.util.JwtUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,10 +40,11 @@ public class AuthController {
         return new ResponseEntity<>(responseDto, responseDto.getStatus());
     }
 
+
     @PostMapping("/login")
-    public ResponseEntity<BaseResponseDto> createToken(@RequestBody LoginRequestDto authRequest) throws Exception {
+    public ResponseEntity<BaseResponseDto> createToken(
+            @RequestBody LoginRequestDto authRequest, HttpServletResponse res) throws Exception {
         try {
-            // Authenticate user using AuthenticationManager
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
             );
@@ -54,23 +57,25 @@ public class AuthController {
                             .build());
         }
 
-        // Load user details setelah autentikasi berhasil
+        // Load user details dan generate token
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
-        // Generate JWT token
         String token = jwtUtil.generateToken(userDetails.getUsername());
 
-        // Buat Map untuk menyimpan token
+        // Buat cookie untuk menyimpan token
+        Cookie cookie = new Cookie("jwtToken", token);
+        cookie.setHttpOnly(true); // Agar cookie tidak bisa diakses dari JavaScript
+        cookie.setMaxAge(86400); // Set cookie untuk satu hari (86400 detik)
+        res.addCookie(cookie); // Menambahkan cookie ke response
+
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("token", token);
 
-        // Buat BaseResponseDto dengan Map sebagai data
         BaseResponseDto responseDto = BaseResponseDto.builder()
                 .status(HttpStatus.OK)
                 .description("Login successful")
-                .data(responseData)  // Map<String, Object> dengan token
+                .data(responseData)
                 .build();
 
-        // Kembalikan response dengan BaseResponseDto
         return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }
 }

@@ -9,5 +9,4 @@ public class RegisterRequestDto {
     private String password;
     private double balance;
     private String creditCard;
-    private String role;
 }

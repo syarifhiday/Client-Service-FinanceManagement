@@ -29,7 +29,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/v1/auth/**").permitAll() // Allow access to authentication endpoints
+                        .requestMatchers("/v1/auth/**", "/register", "/login").permitAll() // Allow access to authentication endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()          // All other requests require authentication
                 ).sessionManagement(session -> session

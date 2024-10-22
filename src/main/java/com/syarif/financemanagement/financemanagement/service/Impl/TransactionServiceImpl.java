@@ -37,11 +37,11 @@ public class TransactionServiceImpl implements TransactionService {
     public BaseResponseDto handleTransaction(TransactionRequestDto transactionRequestDto) {
         String url = "http://localhost:8081/v1/transactions";
 
-        ResponseEntity<TransactionResponseDto> response = restTemplate.postForEntity(url, transactionRequestDto, TransactionResponseDto.class);
+        // Mengambil respons BaseResponseDto dari service transaksi
+        ResponseEntity<BaseResponseDto> responseEntity = restTemplate.postForEntity(url, transactionRequestDto, BaseResponseDto.class);
+        BaseResponseDto response = responseEntity.getBody();
 
-        if (response.getStatusCodeValue() == 201) {
-            TransactionResponseDto transactionResponse = response.getBody();
-
+        if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
             Optional<Users> optionalUser = Optional.ofNullable(userRepository.findByCreditCard(transactionRequestDto.getCreditCard()));
             if (optionalUser.isPresent()) {
                 Users user = optionalUser.get();
@@ -63,20 +63,20 @@ public class TransactionServiceImpl implements TransactionService {
                 }
 
                 userRepository.save(user);
-
                 log.info("Saldo user setelah transaksi: {}", user.getBalance());
             } else {
                 log.warn("User tidak ditemukan dengan creditCard: {}", transactionRequestDto.getCreditCard());
             }
 
+            // Mengembalikan response dengan informasi transaksi
             return BaseResponseDto.builder()
                     .status(HttpStatus.CREATED)
                     .description("Transaction successful")
-                    .data(Collections.singletonMap("transaction", transactionResponse))
+                    .data(response.getData())
                     .build();
         }
 
-        log.error("Transaksi gagal dengan status: {}", response.getStatusCodeValue());
+        log.error("Transaksi gagal dengan status: {}", responseEntity.getStatusCodeValue());
         return BaseResponseDto.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .description("Transaction failed")
